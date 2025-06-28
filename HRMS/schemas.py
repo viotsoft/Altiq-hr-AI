@@ -93,3 +93,44 @@ class TicketRead(TicketBase):
 
 class TicketStatusUpdate(BaseModel):
     status: TicketStatus = Field(..., description="New ticket status")
+
+
+# Business Trip schemas
+TripStatus = Literal['Pending', 'Approved', 'Rejected', 'In Progress', 'Completed', 'Cancelled']
+
+class BusinessTripBase(BaseModel):
+    emp_id: str = Field(..., description="Employee identifier")
+    destination: str = Field(..., description="Travel destination")
+    purpose: str = Field(..., description="Purpose of the business trip")
+    start_date: date = Field(..., description="Trip start date")
+    end_date: date = Field(..., description="Trip end date")
+    estimated_cost: float = Field(..., ge=0, description="Estimated trip cost")
+    manager_id: Optional[str] = Field(None, description="Manager ID for approval")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BusinessTripCreate(BusinessTripBase):
+    pass
+
+
+class BusinessTripRead(BusinessTripBase):
+    trip_id: str = Field(..., description="Trip identifier, e.g. 'TR001'")
+    status: TripStatus = Field(..., description="Current status of the trip")
+    created_at: datetime = Field(..., description="Timestamp when the trip was created")
+    updated_at: datetime = Field(..., description="Timestamp when the trip was last updated")
+    approved_by: Optional[str] = Field(None, description="Manager who approved the trip")
+    approved_at: Optional[datetime] = Field(None, description="Timestamp when the trip was approved")
+
+
+class BusinessTripStatusUpdate(BaseModel):
+    status: TripStatus = Field(..., description="New trip status")
+    approved_by: Optional[str] = Field(None, description="Manager ID who approved/rejected")
+
+
+class BusinessTripExpense(BaseModel):
+    trip_id: str = Field(..., description="Trip identifier")
+    expense_type: str = Field(..., description="Type of expense (Transport, Accommodation, Meals, etc.)")
+    amount: float = Field(..., ge=0, description="Expense amount")
+    description: str = Field(..., description="Description of the expense")
+    expense_date: date = Field(..., description="Date of the expense")

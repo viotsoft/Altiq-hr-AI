@@ -3,9 +3,9 @@ from collections import defaultdict
 from datetime import date, timedelta
 import random
 # from hrms import *
-from HRMS import EmployeeManager, LeaveManager, MeetingManager, TicketManager
+from HRMS import EmployeeManager, LeaveManager, MeetingManager, TicketManager, BusinessTripManager
 
-def seed_services(employee_manager, leave_manager, meeting_manager, ticket_manager):
+def seed_services(employee_manager, leave_manager, meeting_manager, ticket_manager, business_trip_manager):
     """
     Seeds all service classes with coherent dummy data.
 
@@ -14,6 +14,7 @@ def seed_services(employee_manager, leave_manager, meeting_manager, ticket_manag
         leave_manager: Instance of LeaveManager
         meeting_manager: Instance of MeetingManager
         ticket_manager: Instance of TicketManager
+        business_trip_manager: Instance of BusinessTripManager
 
     Returns:
         None - services are modified in-place
@@ -134,11 +135,36 @@ def seed_services(employee_manager, leave_manager, meeting_manager, ticket_manag
         ticket_manager.tickets.append(ticket)
         ticket_manager._next_id += 1
 
+    # Create business trip data
+    destinations = ["New York", "San Francisco", "London", "Tokyo", "Singapore", "Berlin", "Paris", "Sydney"]
+    trip_purposes = ["Client Meeting", "Conference", "Training", "Sales Pitch", "Team Building", "Industry Event"]
+    
+    # Generate some business trips
+    num_trips = random.randint(5, 10)
+    for _ in range(num_trips):
+        employee = random.choice(employees_data)
+        start_date = current_date + timedelta(days=random.randint(10, 60))
+        end_date = start_date + timedelta(days=random.randint(1, 7))
+        
+        from HRMS.schemas import BusinessTripCreate
+        trip_req = BusinessTripCreate(
+            emp_id=employee["emp_id"],
+            destination=random.choice(destinations),
+            purpose=random.choice(trip_purposes),
+            start_date=start_date,
+            end_date=end_date,
+            estimated_cost=random.uniform(1000, 5000),
+            manager_id=employee["manager_id"]
+        )
+        
+        business_trip_manager.create_trip(trip_req)
+
     return {
         "employees": len(employee_manager.employees),
         "leave_records": sum(len(data["history"]) for data in leave_manager.employee_leaves.values()),
         "meetings": sum(len(meetings) for meetings in meeting_manager.meetings.values()),
-        "tickets": len(ticket_manager.tickets)
+        "tickets": len(ticket_manager.tickets),
+        "business_trips": len(business_trip_manager.trips)
     }
 
 if __name__ == "__main__":
@@ -147,14 +173,16 @@ if __name__ == "__main__":
     leave_manager = LeaveManager()
     meeting_manager = MeetingManager()
     ticket_manager = TicketManager()
+    business_trip_manager = BusinessTripManager()
 
     # Seed the services with data
-    result = seed_services(employee_manager, leave_manager, meeting_manager, ticket_manager)
+    result = seed_services(employee_manager, leave_manager, meeting_manager, ticket_manager, business_trip_manager)
 
     print(f"Seeded {result['employees']} employees")
     print(f"Seeded {result['leave_records']} leave records")
     print(f"Seeded {result['meetings']} meetings")
     print(f"Seeded {result['tickets']} tickets")
+    print(f"Seeded {result['business_trips']} business trips")
 
     # employee_manager.add_employee(EmployeeCreate(name="John Doe", manager_id="E001"))
     # print(f"Manager of E004 {employee_manager.get_manager('E004')}")
